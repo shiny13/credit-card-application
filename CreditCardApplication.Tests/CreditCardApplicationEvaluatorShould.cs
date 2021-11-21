@@ -206,8 +206,29 @@ namespace CreditCardApplication.Tests
 
             sut.Evaluate(application);
 
-            //mockValidator.Verify(x => x.IsValid(It.IsAny<string>()));
-            mockValidator.Verify(x => x.IsValid("q"));
+            // Passing a custom error message.
+            mockValidator.Verify(x => x.IsValid(It.IsAny<string>()), "Frequest flyer numbers should be validated.");
+            //mockValidator.Verify(x => x.IsValid("q"));
+        }
+
+        [Fact]
+        public void NotValidateFrequentFlyerNumberForHighIncomeApplications()
+        {
+            var mockValidator = new Mock<IFrequentFlyerNumberValidator>();
+
+            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
+
+            var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
+
+            var application = new CreditCardApplication
+            {
+                GrossAnnualIncome = 100_000
+            };
+
+            sut.Evaluate(application);
+
+            // Specify that the method should never be called.
+            mockValidator.Verify(x => x.IsValid(It.IsAny<string>()), Times.Never);
         }
     }
 }
