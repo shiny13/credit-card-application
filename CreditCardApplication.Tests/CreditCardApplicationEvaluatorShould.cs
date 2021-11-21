@@ -281,5 +281,28 @@ namespace CreditCardApplication.Tests
             // there should't be any other calls on the mock object
             //mockValidator.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public void ReferWhenFrequentFlyerValidationError()
+        {
+            var mockValidator = new Mock<IFrequentFlyerNumberValidator>();
+
+            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
+
+            // This enables the exact type of exception that can be thrown
+            //mockValidator.Setup(x => x.IsValid(It.IsAny<string>())).Throws<Exception>();
+
+            // This enables to initialize the exception and throw any customised messages
+            mockValidator.Setup(x => x.IsValid(It.IsAny<string>())).Throws(new Exception("Custom message"));
+
+            var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
+
+            var application = new CreditCardApplication { Age = 42 };
+
+            CreditCardApplicationDecision decision = sut.Evaluate(application);
+
+            // check if the set property is called
+            Assert.Equal(CreditCardApplicationDecision.ReferredToHuman, decision);
+        }
     }
 }

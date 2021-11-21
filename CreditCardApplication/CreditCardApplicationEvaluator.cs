@@ -29,7 +29,17 @@ namespace CreditCardApplication
 
             _validator.ValidationMode = application.Age >= 30 ? ValidationMode.Detailed : ValidationMode.Quick;
 
-            var isValidFrequentFlyerNumber = _validator.IsValid(application.FrequentFlyerNumber);
+            bool isValidFrequentFlyerNumber;
+            try
+            {
+                isValidFrequentFlyerNumber = _validator.IsValid(application.FrequentFlyerNumber);
+            }
+            catch(Exception)
+            {
+                // log the exception
+                return CreditCardApplicationDecision.ReferredToHuman;
+            }
+
             if (!isValidFrequentFlyerNumber)
             {
                 return CreditCardApplicationDecision.ReferredToHuman;
