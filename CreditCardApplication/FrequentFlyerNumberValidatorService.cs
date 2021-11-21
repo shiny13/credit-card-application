@@ -12,6 +12,8 @@ namespace CreditCardApplication
             throw new NotImplementedException();
         }
 
+        public event EventHandler ValidatorLookupPerformed;
+
         void IFrequentFlyerNumberValidator.IsValid(string frequentFlyerNumber, out bool isValid)
         {
             throw new NotImplementedException();

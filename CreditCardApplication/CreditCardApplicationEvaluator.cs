@@ -9,9 +9,17 @@ namespace CreditCardApplication
         private const int HighIncomeThreshold = 100_000;
         private const int LowIncomeThreshold = 20_000;
 
+        public int ValidatorLookupCount { get; private set; }
+
         public CreditCardApplicationEvaluator(IFrequentFlyerNumberValidator validator)
         {
             _validator = validator ?? throw new System.ArgumentNullException(nameof(validator));
+            _validator.ValidatorLookupPerformed += ValidatorLookupPerformed;
+        }
+
+        private void ValidatorLookupPerformed(object sender, EventArgs e)
+        {
+            ValidatorLookupCount++;
         }
 
 
