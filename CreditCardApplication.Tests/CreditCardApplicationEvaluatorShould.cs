@@ -26,6 +26,7 @@ namespace CreditCardApplication.Tests
             Mock<IFrequentFlyerNumberValidator> mockValidator = new Mock<IFrequentFlyerNumberValidator>();
 
             mockValidator.Setup(x => x.IsValid(It.IsAny<string>())).Returns(true);
+            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns(GetLicenseKeyExpiryString);
 
             var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
 
@@ -33,13 +34,13 @@ namespace CreditCardApplication.Tests
 
             CreditCardApplicationDecision decision = sut.Evaluate(application);
 
-            Assert.Equal(CreditCardApplicationDecision.AutoDeclined, decision);
+            Assert.Equal(CreditCardApplicationDecision.ReferredToHuman, decision);
         }
 
         [Fact]
         public void DeclineLowIncomeApplications()
         {
-            Mock<IFrequentFlyerNumberValidator> mockValidator = new Mock<IFrequentFlyerNumberValidator>(MockBehavior.Strict);
+            Mock<IFrequentFlyerNumberValidator> mockValidator = new Mock<IFrequentFlyerNumberValidator>();
 
             // return true when "x" is passed into it
             //mockValidator.Setup(x => x.IsValid("x")).Returns(true);
@@ -59,6 +60,7 @@ namespace CreditCardApplication.Tests
 
             // return true when a valid param matches the provided regular expression
             mockValidator.Setup(x => x.IsValid(It.IsRegex("[a-z]"))).Returns(true);
+            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns(GetLicenseKeyExpiryString);
 
             var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
 
@@ -77,8 +79,9 @@ namespace CreditCardApplication.Tests
         [Fact]
         public void ReferInvalidFrequentFlyerApplications()
         {
-            Mock<IFrequentFlyerNumberValidator> mockValidator = new Mock<IFrequentFlyerNumberValidator>(MockBehavior.Strict);
+            Mock<IFrequentFlyerNumberValidator> mockValidator = new Mock<IFrequentFlyerNumberValidator>();
             mockValidator.Setup(x => x.IsValid(It.IsAny<string>())).Returns(true);
+            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns(GetLicenseKeyExpiryString);
 
             var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
 
@@ -86,7 +89,7 @@ namespace CreditCardApplication.Tests
 
             CreditCardApplicationDecision decision = sut.Evaluate(application);
 
-            Assert.Equal(CreditCardApplicationDecision.AutoDeclined, decision);
+            Assert.Equal(CreditCardApplicationDecision.ReferredToHuman, decision);
         }
 
         [Fact]
@@ -99,6 +102,26 @@ namespace CreditCardApplication.Tests
             bool isValid = true;
             mockValidator.Setup(x => x.IsValid(It.IsAny<string>(), out isValid));
 
+            // to setup method using ref of an object:
+            //var person1 = new Person();
+            //var person2 = new Person();
+            //var mockGateway = new Mock<IGateway>();
+            //mockGateway.Setup(x => x.Execute(ref person1)).Return(-1);
+            //var sut = new Processor(mockGateway.Object);
+            //sut.Process(person1); //IGateway.Excecute() returns -1
+            //sut.Process(person2); //IGateway.Excecute() returns 0 because 0 is default
+
+            // to setup method using ref of an object with It.Ref<>.IsAny:
+            //var person1 = new Person();
+            //var person2 = new Person();
+            //var mockGateway = new Mock<IGateway>();
+            //mockGateway.Setup(x => x.Execute(ref It.Ref<Person>.IsAny)).Return(-1);
+            //var sut = new Processor(mockGateway.Object);
+            //sut.Process(person1); //IGateway.Excecute() returns -1
+            //sut.Process(person2); //IGateway.Excecute() returns -1
+            //public class Boss : Person {}
+            //sut.Process(new Boss()); // IGateway.Execute() return -1
+
             var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
 
             var application = new CreditCardApplication
@@ -110,6 +133,38 @@ namespace CreditCardApplication.Tests
             CreditCardApplicationDecision decision = sut.EvaluateUsingOut(application);
 
             Assert.Equal(CreditCardApplicationDecision.ReferredToHuman, decision);
+        }
+
+        [Fact]
+        public void ReferWhenLicenseKeyExpired()
+        {
+            // Setup all the mock objects individually in the heirarchy chain
+            //var mockLicenseData = new Mock<ILicenseData>();
+            //mockLicenseData.Setup(x => x.LicenseKey).Returns(GetLicenseKeyExpiryString);
+            //var mockServiceInfo = new Mock<IServiceInformation>();
+            //mockServiceInfo.Setup(x => x.License).Returns(mockLicenseData.Object);
+
+            //var mockValidator = new Mock<IFrequentFlyerNumberValidator>(MockBehavior.Strict);
+            //mockValidator.Setup(x => x.ServiceInformation).Returns(mockServiceInfo.Object);
+            //mockValidator.Setup(x => x.IsValid(It.IsAny<string>())).Returns(true);
+
+            // Setup just the last method in the heirarchy by accessing all the objects
+            var mockValidator = new Mock<IFrequentFlyerNumberValidator>(MockBehavior.Strict);
+            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns(GetLicenseKeyExpiryString);
+            mockValidator.Setup(x => x.IsValid(It.IsAny<string>())).Returns(true);
+
+            var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
+            var application = new CreditCardApplication { Age = 42 };
+
+            CreditCardApplicationDecision decision = sut.Evaluate(application);
+
+            Assert.Equal(CreditCardApplicationDecision.ReferredToHuman, decision);
+        }
+
+        string GetLicenseKeyExpiryString()
+        {
+            // Eg. read from vendor-supplied constants file
+            return "EXPIRED";
         }
     }
 }
