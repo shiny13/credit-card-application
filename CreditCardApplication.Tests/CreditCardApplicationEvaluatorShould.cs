@@ -277,6 +277,9 @@ namespace CreditCardApplication.Tests
 
             // Check if the set property is called at least once
             mockValidator.VerifyGet(x => x.ServiceInformation.License.LicenseKey, Times.AtLeastOnce);
+
+            // there should't be any other calls on the mock object
+            //mockValidator.VerifyNoOtherCalls();
         }
     }
 }
