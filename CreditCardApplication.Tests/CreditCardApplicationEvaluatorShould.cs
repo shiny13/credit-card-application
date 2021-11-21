@@ -206,9 +206,14 @@ namespace CreditCardApplication.Tests
 
             sut.Evaluate(application);
 
-            // Passing a custom error message.
-            mockValidator.Verify(x => x.IsValid(It.IsAny<string>()), "Frequest flyer numbers should be validated.");
             //mockValidator.Verify(x => x.IsValid("q"));
+
+            // Passing a custom error message.
+            //mockValidator.Verify(x => x.IsValid(It.IsAny<string>()), "Frequest flyer numbers should be validated.");
+
+            // Specifying a specific number of calls for the method
+            //mockValidator.Verify(x => x.IsValid(It.IsAny<string>()), Times.Exactly(2));
+            mockValidator.Verify(x => x.IsValid(It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
@@ -229,6 +234,49 @@ namespace CreditCardApplication.Tests
 
             // Specify that the method should never be called.
             mockValidator.Verify(x => x.IsValid(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public void CheckLicenseKeyForLowIncomeApplications()
+        {
+            var mockValidator = new Mock<IFrequentFlyerNumberValidator>();
+
+            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
+
+            var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
+
+            var application = new CreditCardApplication
+            {
+                GrossAnnualIncome = 99_000
+            };
+
+            sut.Evaluate(application);
+
+            // check if the get property is called
+            mockValidator.VerifyGet(x => x.ServiceInformation.License.LicenseKey);
+
+            // Check if the get property is called at least once
+            mockValidator.VerifyGet(x => x.ServiceInformation.License.LicenseKey, Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public void SetDetailedLookupForOlderApplications()
+        {
+            var mockValidator = new Mock<IFrequentFlyerNumberValidator>();
+
+            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
+
+            var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
+
+            var application = new CreditCardApplication { Age = 30 };
+
+            sut.Evaluate(application);
+
+            // check if the set property is called
+            mockValidator.VerifySet(x => x.ValidationMode = ValidationMode.Detailed);
+
+            // Check if the set property is called at least once
+            mockValidator.VerifyGet(x => x.ServiceInformation.License.LicenseKey, Times.AtLeastOnce);
         }
     }
 }
