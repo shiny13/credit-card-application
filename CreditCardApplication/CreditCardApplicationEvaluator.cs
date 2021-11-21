@@ -33,7 +33,7 @@ namespace CreditCardApplication
                 return CreditCardApplicationDecision.ReferredToHuman;
             }
 
-            if (application.Age >= AutoReferralMaxAge)
+            if (application.Age <= AutoReferralMaxAge)
             {
                 return CreditCardApplicationDecision.ReferredToHuman;
             }

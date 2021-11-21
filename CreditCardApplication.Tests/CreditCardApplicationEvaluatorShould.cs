@@ -24,9 +24,9 @@ namespace CreditCardApplication.Tests
         public void ReferYoungApplications()
         {
             Mock<IFrequentFlyerNumberValidator> mockValidator = new Mock<IFrequentFlyerNumberValidator>();
+            mockValidator.DefaultValue = DefaultValue.Mock;
 
             mockValidator.Setup(x => x.IsValid(It.IsAny<string>())).Returns(true);
-            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns(GetLicenseKeyExpiryString);
 
             var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
 
@@ -60,7 +60,7 @@ namespace CreditCardApplication.Tests
 
             // return true when a valid param matches the provided regular expression
             mockValidator.Setup(x => x.IsValid(It.IsRegex("[a-z]"))).Returns(true);
-            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns(GetLicenseKeyExpiryString);
+            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
 
             var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
 
@@ -73,7 +73,7 @@ namespace CreditCardApplication.Tests
 
             CreditCardApplicationDecision decision = sut.Evaluate(application);
 
-            Assert.Equal(CreditCardApplicationDecision.ReferredToHuman, decision);
+            Assert.Equal(CreditCardApplicationDecision.AutoDeclined, decision);
         }
 
         [Fact]
@@ -81,7 +81,7 @@ namespace CreditCardApplication.Tests
         {
             Mock<IFrequentFlyerNumberValidator> mockValidator = new Mock<IFrequentFlyerNumberValidator>();
             mockValidator.Setup(x => x.IsValid(It.IsAny<string>())).Returns(true);
-            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns(GetLicenseKeyExpiryString);
+            mockValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
 
             var sut = new CreditCardApplicationEvaluator(mockValidator.Object);
 
