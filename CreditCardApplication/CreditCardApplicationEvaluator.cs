@@ -11,14 +11,21 @@ namespace CreditCardApplication
 
         public CreditCardApplicationEvaluator(IFrequentFlyerNumberValidator validator)
         {
-            _validator = validator;
+            _validator = validator ?? throw new System.ArgumentNullException(nameof(validator));
         }
+
 
         public CreditCardApplicationDecision Evaluate(CreditCardApplication application)
         {
             if (application.GrossAnnualIncome >= HighIncomeThreshold)
             {
                 return CreditCardApplicationDecision.AutoAccepted;
+            }
+
+            var isValidFrequentFlyerNumber = _validator.IsValid(application.FrequentFlyerNumber);
+            if (!isValidFrequentFlyerNumber)
+            {
+                return CreditCardApplicationDecision.AutoDeclined;
             }
 
             if (application.Age >= AutoReferralMaxAge)
